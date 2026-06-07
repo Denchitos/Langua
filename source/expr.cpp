@@ -316,6 +316,7 @@ bool Expression::isVar(bool mustFindOperator)
 
 size_t Expression::find_next_operator()
 {
+    std::cout<<"Found\n";
     unParanth();
     size_t next_op_pos = 0;
     size_t in_parantheses = 0;
