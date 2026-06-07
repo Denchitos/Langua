@@ -1,0 +1,133 @@
+#pragma once
+#include<string>
+#include<memory>
+
+template<typename T>
+using up = std::unique_ptr<T>;
+
+enum class DataType
+{
+    Int,
+    Double,
+    Bool
+};
+
+extern const std::unordered_map<DataType,std::string> TypeToStr;
+
+class BaseLangObject;
+
+class LangInt;
+class LangDouble;
+
+using Object = std::unique_ptr<BaseLangObject>;
+
+
+
+class BaseLangObject
+{
+protected:
+    DataType type;
+public:
+    BaseLangObject(DataType _type);
+    virtual DataType getType() const;
+    virtual Object sum(Object&);
+    virtual Object multiply(Object&);
+    virtual Object substract(Object&);
+    virtual Object divide(Object&);
+    virtual Object negative();
+    virtual Object inverse();
+    virtual std::string toStdStr() const;
+    virtual ~BaseLangObject() = default;
+    //virtual up<LangInt> toInt();
+    //virtual up<LangDouble> toDouble();
+    //virtual up<Lang> toBool() { throw LangException{0,std::string("No Conversation to [BOOL]") }; }
+    //virtual Object cast(DataType type);
+};
+
+///LANGINT///LANGINT///LANGINT///LANGINT///LANGINT///
+
+class LangInt : public BaseLangObject
+{
+    int value;
+public:
+    LangInt(int);
+    DataType getType() const override;
+    Object sum(Object&) override;
+    Object multiply(Object&) override;
+    Object divide(Object&) override;
+    Object substract(Object&) override;
+    Object negative() override;
+    int getValue();
+    //up<LangInt> toInt();
+    //up<LangDouble> toDouble();
+
+    std::string toStdStr() const override;
+    
+
+    //Object cast(DataType type);
+};
+
+Object sum(Object&,Object&);
+Object substract(Object&,Object&);
+Object divide(Object&,Object&);
+Object multiply(Object&,Object&);
+void assignment();
+
+
+Object newInt(int);
+Object newInt(const Object&);
+
+///LANGDOUBLE///LANGDOUBLE///LANGDOUBLE///LANGDOUBLE///LANGDOUBLE///
+
+class LangDouble : public BaseLangObject
+{
+    double value;
+public:
+    LangDouble(double);
+    DataType getType() const override;
+    Object sum(Object&) override;
+    Object multiply(Object&) override;
+    Object divide(Object&) override;
+    Object substract(Object&) override;
+    Object negative() override;
+    double getValue();
+    std::string toStdStr() const override;
+
+    //up<LangInt> toInt();
+    //up<LangDouble> toDouble();
+
+    //Object cast(DataType type);
+};
+
+Object newDouble(double);
+Object newDouble(const Object&);
+
+
+///LANGBOOL///LANGBOOL///LANGBOOL///LANGBOOL///LANGBOOL///
+
+class LangBool : public BaseLangObject
+{
+    bool value;
+public:
+    LangBool(bool);
+    DataType getType() const override;
+    Object inverse() override;
+    bool getValue();
+    std::string toStdStr() const override;
+
+    //up<LangInt> toInt();
+    //up<LangDouble> toDouble();
+
+    //Object cast(DataType type);
+};
+
+Object newBool(bool);
+Object newBool(const Object&);
+
+////HELPING////HELPING////HELPING////HELPING////HELPING////
+
+Object newObject(const Object&);
+
+Object copyVar(const std::string& name);
+void setVar(const std::string& name,Object& val);
+void consoleLogVars();
