@@ -20,15 +20,15 @@ void test()
         //std::cout<<my_expr<<"\n";
         try
         {
-            Lexer l;
-            auto t = l.new_tokenize_expr(my_expr);
+            Lexer l = Lexer{};
+            auto t = l.tokenize(my_expr);
             for (auto& i: t)
             {
                 i.print();
             }
-            // Expression r(my_expr);
-            // std::unique_ptr<ExprElem> x(r.makeTree());
-            // x->count();
+            Expression r(my_expr);
+            std::unique_ptr<ExprElem> x(r.makeTree());
+            if (x) x->count();
         }
         catch(LangException le)
         {

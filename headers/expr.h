@@ -1,6 +1,7 @@
 #pragma once
 #include<string>
 #include "init.h"
+#include "classes.h"
 #include<vector>
 
 #if 0
@@ -35,7 +36,7 @@ class Lexer{
     TokenType currentType = TokenType::Null;
 public:
     void update();
-    std::vector<Token> new_tokenize_expr(const std::string& s);
+    std::vector<Token> tokenize(const std::string& s);
 };
 
 enum class ExprType
@@ -121,19 +122,20 @@ std::vector<std::string> tokenize_expr(const std::string& _expr);
 
 class Expression
 {
-    std::vector<std::string> nexpr;
+    Lexer l;
+    std::vector<Token> nexpr;
 public:
     Expression(const std::string& _expr);
 
-    Expression(const std::vector<std::string>& tokens,int i,int j);
+    Expression(const std::vector<Token>& tokens,size_t i,size_t j);
 
-    void print();
+    //void print();
 
-    bool isVar(bool mustFindOperator = false);
+    //bool isVar(bool mustFindOperator = false);
     
     size_t find_next_operator();
 
-    void unParanth();
+    void unParenth();
     size_t log();
 
     ExprElem* makeTree();

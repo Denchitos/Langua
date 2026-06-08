@@ -6,7 +6,8 @@ const std::unordered_map<DataType,std::string> TypeToStr
 {
     { DataType::Int, "INT" },
     { DataType::Double, "DOUBLE" },
-    { DataType::Bool, "BOOL" }
+    { DataType::Bool, "BOOL" },
+    { DataType::String, "STRING" }
 };
 
 ////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////////BASELANGOBJECT////////BASELANGOBJECT////
@@ -119,6 +120,11 @@ Object LangInt::multiply(Object& rhs)
         double v2 = static_cast<LangDouble*>(rhs.get())->getValue();
         return newDouble( value * v2);
     }
+    if (rhs->getType() == DataType::String)
+    {
+        auto t = newInt(value);
+        return rhs->multiply( t );
+    }
     throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
 }
 
@@ -152,7 +158,7 @@ Object newInt(const Object& ins)
 ////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////LANGDOUBLE////
 
 
-LangDouble::LangDouble(double x):BaseLangObject(DataType::Int),value(x){}
+LangDouble::LangDouble(double x):BaseLangObject(DataType::Double),value(x){}
 
 DataType LangDouble::getType() const
 {
@@ -263,7 +269,7 @@ DataType LangBool::getType() const
 }
 Object LangBool::inverse()
 {
-    return newBool(value);
+    return newBool(!value);
 };
 bool LangBool::getValue()
 {
@@ -279,11 +285,79 @@ Object newBool(bool v)
 {
     return std::make_unique<LangBool>(v);
 }
+Object newBool(const std::string& v)
+{
+    if (v=="true") return std::make_unique<LangBool>(true);
+    if (v=="false") return std::make_unique<LangBool>(false);
+    LangException{0,std::string("Data type [BOOL] can't has rvalue: ")+v};
+}
 Object newBool(const Object& ins)
 {
     bool x = static_cast<LangBool*>(ins.get())->getValue();
     return newBool(x);
 }
+
+
+/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
+/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
+/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
+/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
+/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
+
+
+LangString::LangString(const std::string& s): BaseLangObject(DataType::String), value(s)
+{
+
+}
+DataType LangString::getType() const
+{
+    return DataType::String;
+}
+std::string LangString::getValue()
+{
+    return value;
+}
+Object LangString::sum(Object& rhs)
+{
+    if (rhs->getType()!=DataType::String)
+    {
+        { throw LangException{0,std::string("Operation [ MULTIPLY ] is n't defined for [")+TypeToStr.at(type)+"] and ["+ TypeToStr.at(rhs->getType()) +"]"}; }
+    }
+    std::string x = static_cast<LangString*>(rhs.get())->getValue();
+    return newString(value+x);
+}
+Object LangString::multiply(Object& rhs)
+{
+    if (rhs->getType()!=DataType::Int)
+    {
+        { throw LangException{0,std::string("Operation [ MULTIPLY ] is n't defined for [")+TypeToStr.at(type)+"] and ["+ TypeToStr.at(rhs->getType()) +"]"}; }
+    }
+    int x = static_cast<LangInt*>(rhs.get())->getValue();
+    std::string s;
+    for (int i =0;i<x;i++)
+    {
+        s+=value;
+    }
+    return newString(s);
+}
+std::string LangString::toStdStr() const
+{
+    return std::string("\"")+value+"\"";
+}
+
+Object newString(const std::string& v)
+{
+    return std::make_unique<LangString>(v);
+}
+
+Object newString(const Object& v)
+{
+    std::string x = static_cast<LangString*>(v.get())->getValue();
+    return newString(x);
+}
+
+
+
 
 /////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////
 /////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////HELPING/////
@@ -316,11 +390,32 @@ Object newObject(const Object& z)
     if (z->getType() == DataType::Int) return newInt(z);
     if (z->getType() == DataType::Double) return newDouble(z);
     if (z->getType() == DataType::Bool) return newBool(z);
+    if (z->getType() == DataType::String) return newString(z);
     throw LangException{0,std::string("Unknown Data Type to create")};
 }
 
 
+Object newObject(const std::string& rValue)
+{
+    size_t len = rValue.length();
+    char c = rValue[0];
+    if (isDigit(c))
+    {
+        return (rValue.find('.')==std::string::npos) ? newInt( stoi(rValue) ) : newDouble(stod(rValue));
+    }
 
+    if (c=='\"')
+    {
+        return newString(rValue.substr(1,len-2));
+    }
+
+    DataType type;
+    if ( string_value.contains(rValue) ) type = string_value.at(rValue); 
+
+    if (type==DataType::Bool) return newBool(rValue);
+
+    throw LangException{0,std::string("Can't deduce the type by rvalue: ")+rValue};
+}
 
 
 
@@ -337,8 +432,9 @@ static std::unordered_map<std::string,Object> vars;
 
 void setVar(const std::string& name,Object& val)
 {
-    logger<<" Var Registered \'"<< name <<"\' "<< val;
+    //std::cout<<" Var Registered \'"<< name <<"\' "<<TypeToStr.at(val->getType())<<" "<< val->toStdStr()<<"\n";
     vars[name] = std::move(val);
+    //std::cout<<"\t"<<name<<" ("<< TypeToStr.at(vars[name]->getType()) <<") = " << vars[name]->toStdStr()<<"\n";
     logger.log();
 }
 

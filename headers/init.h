@@ -44,6 +44,10 @@ public:
     friend void setDebugStream( std::ostream* out);
 };
 
+bool isLetter(char c);
+bool isDigit(char c);
+bool isOperator(char c);
+
 void setDebugMode(bool m = true);
 extern Logger logger;
 extern const std::unordered_set<char> nonVariable;
@@ -55,7 +59,7 @@ extern const std::unordered_map<std::string,Object (BaseLangObject::*)()> unary_
 extern const std::string letters;
 extern const std::string numbers;
 extern const std::string operator_symbols;
-extern const std::unordered_set<std::string> string_value;
+extern const std::unordered_map<std::string,DataType> string_value;
 extern const std::unordered_set<std::string> unary_operators;
 extern const std::unordered_set<std::string> binary_operators;
 extern const std::unordered_set<std::string> all_operators;

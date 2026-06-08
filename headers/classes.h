@@ -5,11 +5,12 @@
 template<typename T>
 using up = std::unique_ptr<T>;
 
-enum class DataType
+enum class DataType //After Adding a new type, don't forget add this DataType to TypeToStr map in classes.cpp
 {
     Int,
     Double,
-    Bool
+    Bool,
+    String
 };
 
 extern const std::unordered_map<DataType,std::string> TypeToStr;
@@ -38,10 +39,6 @@ public:
     virtual Object inverse();
     virtual std::string toStdStr() const;
     virtual ~BaseLangObject() = default;
-    //virtual up<LangInt> toInt();
-    //virtual up<LangDouble> toDouble();
-    //virtual up<Lang> toBool() { throw LangException{0,std::string("No Conversation to [BOOL]") }; }
-    //virtual Object cast(DataType type);
 };
 
 ///LANGINT///LANGINT///LANGINT///LANGINT///LANGINT///
@@ -124,9 +121,29 @@ public:
 Object newBool(bool);
 Object newBool(const Object&);
 
+
+////LANGSTRING////LANGSTRING////LANGSTRING////LANGSTRING////LANGSTRING////
+
+
+class LangString : public BaseLangObject
+{
+    std::string value;
+public:
+    LangString(const std::string& s);
+    std::string getValue();
+    DataType getType() const;
+    Object sum(Object&);
+    Object multiply(Object&);
+    std::string toStdStr() const;
+};
+
+Object newString(const Object& v);
+Object newString(const std::string& v);
+
 ////HELPING////HELPING////HELPING////HELPING////HELPING////
 
 Object newObject(const Object&);
+Object newObject(const std::string& rValue);
 
 Object copyVar(const std::string& name);
 void setVar(const std::string& name,Object& val);

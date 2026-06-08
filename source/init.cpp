@@ -45,8 +45,11 @@ static const std::unordered_map<DataType,std::string> TypeToStr
 };
 #endif
 
-const std::unordered_set<std::string> string_value{ "true" , "false"};
-
+const std::unordered_map<std::string,DataType> string_value
+{
+    { "true" , DataType::Bool},
+    { "false", DataType::Bool}
+};
 const std::string letters = ".abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
 const std::string numbers = "0123456789";
 const std::string operator_symbols = "+-/*=!";
@@ -66,6 +69,20 @@ bool canBeVar(std::string& s)
     return true;
 }
 
+bool isLetter(char c)
+{
+    return  letters.find(c) != std::string::npos; 
+}
+
+bool isDigit(char c)
+{
+    return  numbers.find(c) != std::string::npos; 
+}
+
+bool isOperator(char c)
+{
+    return  operator_symbols.find(c) != std::string::npos;
+}
 
 #if 0
 ////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////////BASELANGOBJECT////////BASELANGOBJECT////

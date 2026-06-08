@@ -1,6 +1,8 @@
 #include "../headers/expr.h"
 #include<stack>
 
+static const size_t NOT_FOUND = 0;
+
 ExprElem::ExprElem(ExprType t) : type(t){}
 ExprType ExprElem::getType(){ return type; }
 void ExprElem::setParent(ExprElem* p){ parent = p; }
@@ -21,11 +23,13 @@ Object ExprElem::count()
 
 ExprNumber::ExprNumber(std::string& s) : ExprElem(ExprType::Number)
 {
-    if ( s.find('.') == std::string::npos ) value = newInt( stoi(s) );
-    if ( s.find('.') != std::string::npos ) value = newDouble( stod(s) );
+    value = newObject(s);
+    //std::cout<<value->toStdStr()<<"\n";
 }
 Object ExprNumber::getValue()
 {
+    //std::cout<<value->toStdStr()<<" Before Stop in GetValue"<<"\n";
+    //std::cout<<" Before Stop in GetValue ret"<<"\n";
     return std::move(value);
 }
 
@@ -68,12 +72,20 @@ Object ExprOperation::getValue()
     }
     else
     {
+        //std::cout<<"In assignment\n";
+        //system("pause");
         if ( left->getType() != ExprType::Variable ) throw LangException{0,"Left Operand isn't a variable"};
         auto var = static_cast<ExprVariable*>(left);
+        
+        std::cout<<"Var Name: \n"<<var->getName()<<"\n";
+        //system("pause");
+      
         Object b = right->getValue();
-        logger<<b;
-        logger.log();
+        //std::cout<<"Value: "<<b->toStdStr()<<" "<<b<<"\n";
+        //system("pause");
         setVar(var->getName(),b);
+        //std::cout<<"Value moved: ";//<<b->toStdStr()<<" "<<b<<"\n";
+        //system("pause");
         return copyVar(var->getName());
     }
 }
@@ -184,29 +196,13 @@ void Token::print() const
     std::cout<<"Type: "<<(int)type<<", Value: \'"<<value<<"\' "<<'\n';
 }
 
-bool isLetter(char c)
-{
-    return  letters.find(c) != std::string::npos; 
-}
-
-bool isDigit(char c)
-{
-    return  numbers.find(c) != std::string::npos; 
-}
-
-bool isOperator(char c)
-{
-    return  operator_symbols.find(c) != std::string::npos;
-}
-
-
 void Lexer::update()
 {
     result.emplace_back(currentToken,currentType);
     currentToken.clear();
     currentType = TokenType::Null;
 }
-std::vector<Token> Lexer::new_tokenize_expr(const std::string& s)
+std::vector<Token> Lexer::tokenize(const std::string& s)
 {
     size_t parenCounter = 0;
     std::unordered_set<TokenType> expections;
@@ -228,6 +224,21 @@ std::vector<Token> Lexer::new_tokenize_expr(const std::string& s)
             update();
             continue;
         }
+        else if (s[i] == '\"' && parenCounter==0)
+        {
+            currentToken = "\"";
+            i++;
+            while (i < len && s[i] != '\"') {
+                currentToken += s[i++];
+            }
+            if (i >= len) throw LangException{0, "Unterminated string"};
+            currentToken += '\"';
+            i++;
+            currentType = TokenType::StringValue;
+            //system("pause");
+            update();
+            continue;
+        }
         else if( isOperator(s[i]) && parenCounter==0 )
         {
             while (i<len && isOperator(s[i]) && ( binary_operators.contains(currentToken+s[i]) || unary_operators.contains(currentToken+s[i]) ) )
@@ -235,7 +246,7 @@ std::vector<Token> Lexer::new_tokenize_expr(const std::string& s)
                 currentToken+=s[i++];
             }
             currentType = TokenType::UnaryOperator;
-            if ( !result.empty() && result.back().type!=TokenType::BinaryOperator ) currentType=TokenType::BinaryOperator;
+            if ( !result.empty() && !(result.back().type==TokenType::BinaryOperator || result.back().type==TokenType::UnaryOperator)) currentType=TokenType::BinaryOperator;
             update();
             continue;
         }
@@ -290,131 +301,85 @@ std::vector<Token> Lexer::new_tokenize_expr(const std::string& s)
 
 ////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////
 
-Expression::Expression(const std::vector<std::string>& tokens,int i,int j)
+Expression::Expression(const std::string & expr)
 {
-    for (int s = i;s<j;s++)
-    {
-        nexpr.push_back(tokens[s]);
-    }
-};
+    nexpr = l.tokenize(expr);
+}
 
-Expression::Expression(const std::string& _expr)
+Expression::Expression(const std::vector<Token>& tokens,size_t i,size_t j)
 {
-    nexpr = tokenize_expr(_expr);
-};
-
-bool Expression::isVar(bool mustFindOperator)
-{
-    if (nexpr.size()!=1) return false;
-    if (mustFindOperator)
+    nexpr.reserve(j-i);
+    while (i<j)
     {
-        auto op = find_next_operator();
-        if (op) return false;
+        nexpr.emplace_back(tokens[i++]);
     }
-    return canBeVar(nexpr[0]);
 }
 
 size_t Expression::find_next_operator()
 {
-    std::cout<<"Found\n";
-    unParanth();
-    size_t next_op_pos = 0;
-    size_t in_parantheses = 0;
-    short min_weight = 255;
-    for (size_t i = 1; i<nexpr.size() ; i++)
+    size_t pos = 0;
+    short min_weight = 127;
+    for (size_t i = 1;i<nexpr.size();i++)
     {
-        std::string c = nexpr[i];
-        logger<<"\'"<<c<<"\' - ";
-        if (operators_weigth.contains(c) && min_weight > operators_weigth.at(c))
+        if ( nexpr[i].type == TokenType::BinaryOperator )
         {
-            min_weight = operators_weigth.at(c);
-            next_op_pos = i;
-        }
-    }
-    logger.log();
-    return next_op_pos;
-}
 
-void Expression::unParanth()
-{
-    if (nexpr.size() == 1 && nexpr[0][0] == '(')
-    {
-        logger << "MUST UNPARANTH\n";
-        size_t paranth_counter = 1;
-        for (size_t i = 1;i<nexpr[0].length()-1;i++)
-        {
-            switch (nexpr[0][i])
+            if ( operators_weigth.contains(nexpr[i].value) && operators_weigth.at(nexpr[i].value) < min_weight)
             {
-                case '(': paranth_counter++;break;
-                case ')': paranth_counter--;break;
+                min_weight = operators_weigth.at(nexpr[i].value);
+                pos = i;
             }
-            if ( paranth_counter==0) return;
         }
-        nexpr[0].erase(nexpr[0].length()-1,1);
-        nexpr[0].erase(0,1);
-        logger<<"AFTER UNPARANTH{\n";
-        logger<<nexpr[0]<<"\n}\n";
-        logger.log();
-        nexpr = std::move(tokenize_expr(nexpr[0]));
     }
+    return pos;
 }
-// size_t Expression::log()
-// {
-//     size_t op = find_next_operator();
-//     return op;
-// }
 
-void Expression::print()
+void Expression::unParenth()
 {
-    logger<<"[EXPRESSION]{\n";
-    for (auto& i : nexpr)
-    {
-        logger << i<<' ';
-    }
-    logger<<"\n}";
-    logger.log();
+    if (!(nexpr.size()==1 && nexpr[0].value[0] == '(' )) return;
+    nexpr[0].value.erase(nexpr[0].value.length()-1,1);
+    nexpr[0].value.erase(0,1);
 }
 
 ExprElem* Expression::makeTree()
 {
-    unParanth();
-    print();
-    size_t div = find_next_operator();
-    logger<<"<- "<<div<<"\n";
-    logger.log();
-    if (div!=0)
+    unParenth();
+    auto next = find_next_operator();
+
+    // for (auto& t: nexpr)
+    // {
+    //     t.print();
+    // }
+    // if (nexpr.empty()) std::cout<<"NEXPR IS EMPTY\n";
+    // system("pause");
+
+    auto type = nexpr[next].type;
+
+    if (next!=NOT_FOUND)
     {
-        logger << "[BINARY OPERATION DETECTED] "<<nexpr[div]<<"\n";
-        logger << nexpr[0] << " "<<nexpr[div] << " "<<nexpr[div+1] << nexpr[nexpr.size()-1] << "\n";
-        auto operNode = new ExprOperation(nexpr[div]);
-        Expression L = Expression(nexpr,0,div);
-        Expression R = Expression(nexpr,div+1,nexpr.size());
+        auto operNode = new ExprOperation(nexpr[next].value);
+        Expression L = Expression(nexpr,0,next);
+        Expression R = Expression(nexpr,next+1,nexpr.size());
         operNode->setLeft( L.makeTree() );
         operNode->setRight( R.makeTree() );
-        logger.log();
         return operNode;
     }
-    else if ( nexpr.size()!=1 )
+    else if (type==TokenType::UnaryOperator)
     {
-        logger << "[UNARY OPERATION DETECTED] "<<nexpr[0]<<"\n";
-        auto UnNode = new ExprUnarOperation(nexpr[0]);
+        auto unaryNode = new ExprUnarOperation( nexpr[next].value );
         Expression C = Expression( nexpr, 1,nexpr.size() );
-        UnNode->setChild( C.makeTree() );
-        logger.log();
-        return UnNode;
+        unaryNode->setChild( C.makeTree() );
+        return unaryNode;
     }
-    else if (!isVar())
+    else if (type==TokenType::Number || type==TokenType::StringValue)
     {
-        logger << "[SIMPLE NUMBER DETECTED] "<<nexpr[0]<<"\n";;
-        auto numNode = new ExprNumber(nexpr[0]);
-        logger.log();
+        auto numNode = new ExprNumber(nexpr[next].value);
         return numNode;
     }
-    else if (isVar())
+    else if (type==TokenType::Variable)
     {
-        logger << "[VARIABLE DETECTED] "<<nexpr[0]<<"\n";;
         logger.log();
-        return new ExprVariable(nexpr[0]);
+        return new ExprVariable(nexpr[next].value);
     }
-    else throw LangException{0,"WrongException"};
+    else throw LangException{0,"WrongType"};
 }
