@@ -37,6 +37,7 @@ public:
     virtual Object divide(Object&);
     virtual Object negative();
     virtual Object inverse();
+    virtual Object less(Object&);
     virtual std::string toStdStr() const;
     virtual ~BaseLangObject() = default;
 };
@@ -54,6 +55,7 @@ public:
     Object divide(Object&) override;
     Object substract(Object&) override;
     Object negative() override;
+    Object less(Object&);
     int getValue();
     //up<LangInt> toInt();
     //up<LangDouble> toDouble();

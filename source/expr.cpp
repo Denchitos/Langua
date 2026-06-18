@@ -7,15 +7,15 @@ ExprElem::ExprElem(ExprType t) : type(t){}
 ExprType ExprElem::getType(){ return type; }
 void ExprElem::setParent(ExprElem* p){ parent = p; }
 ExprElem* ExprElem::getParent(){ return parent; }
-Object ExprElem::getValue(){ return 0; }
+Object ExprElem::getValue(Frame * f){ return 0; }
 ExprElem::~ExprElem()
 {
     logger << " TYPE OF EXPR NODE " << (int)type;
     logger.log();
 };
-Object ExprElem::count()
+Object ExprElem::count(Frame * f)
 {
-    Object res = getValue();
+    Object res = getValue(f);
     logger << res;
     logger.log();
     return res; 
@@ -26,19 +26,19 @@ ExprNumber::ExprNumber(std::string& s) : ExprElem(ExprType::Number)
     value = newObject(s);
     //std::cout<<value->toStdStr()<<"\n";
 }
-Object ExprNumber::getValue()
+Object ExprNumber::getValue(Frame * f)
 {
     //std::cout<<value->toStdStr()<<" Before Stop in GetValue"<<"\n";
     //std::cout<<" Before Stop in GetValue ret"<<"\n";
-    return std::move(value);
+    return newObject(value);
 }
 
 ExprVariable::ExprVariable(std::string& s) : ExprElem(ExprType::Variable), value(s) {}
 
 
-Object ExprVariable::getValue()
+Object ExprVariable::getValue(Frame * f)
 {
-    return copyVar(value);
+    return f->copyVar(value);
 }
 std::string ExprVariable::getName()
 {
@@ -63,11 +63,11 @@ ExprElem* ExprOperation::getLeft( )
 {
     return left;
 }
-Object ExprOperation::getValue()
+Object ExprOperation::getValue(Frame * f)
 {
     if (op!="="){
-        Object a = left->getValue();
-        Object b = right->getValue();
+        Object a = left->getValue(f);
+        Object b = right->getValue(f);
         return ((*a).*operator_match.at(op))(b);
     }
     else
@@ -77,16 +77,16 @@ Object ExprOperation::getValue()
         if ( left->getType() != ExprType::Variable ) throw LangException{0,"Left Operand isn't a variable"};
         auto var = static_cast<ExprVariable*>(left);
         
-        std::cout<<"Var Name: \n"<<var->getName()<<"\n";
+        //std::cout<<"Var Name: \n"<<var->getName()<<"\n";
         //system("pause");
       
-        Object b = right->getValue();
+        Object b = right->getValue(f);
         //std::cout<<"Value: "<<b->toStdStr()<<" "<<b<<"\n";
         //system("pause");
-        setVar(var->getName(),b);
+        f->setVar(var->getName(),b);
         //std::cout<<"Value moved: ";//<<b->toStdStr()<<" "<<b<<"\n";
         //system("pause");
-        return copyVar(var->getName());
+        return f->copyVar(var->getName());
     }
 }
 ExprOperation::ExprOperation(const std::string& op) : ExprElem(ExprType::Operation), op(op){}
@@ -102,11 +102,11 @@ void ExprUnarOperation::setChild( ExprElem* el )
     child->setParent(this);
 }
 
-Object ExprUnarOperation::getValue()
+Object ExprUnarOperation::getValue(Frame * f)
 {
     if (unary_operator_match.contains(op)){
         auto fp = unary_operator_match.at(op);
-        auto a = child->getValue();
+        auto a = child->getValue(f);
         return ((*a).*fp)();
     }
     throw LangException(0,std::string( "Unknown Unary Operation" ) + op);
@@ -124,76 +124,13 @@ ExprUnarOperation::~ExprUnarOperation()
     if (child) delete child;
 }
 
-std::vector<std::string> tokenize_expr(const std::string& _expr)
-{
-    std::stack<std::string> stackParanth;
-    std::vector<std::string> res = { "" };
-    size_t k = 0;
-    res.reserve(5);
-
-    bool in_operator = false;
-    for ( int i = 0;i<_expr.length();i++)
-    {
-        char c = _expr[i];
-        if (c!=' ')
-        {          
-            if ( open_parantheses_match.contains(std::string(1,c)) )
-            {
-                stackParanth.push( open_parantheses_match.at(std::string(1,c)) );
-            }
-            else if ( close_parantheses_match.contains(std::string(1,c)) && stackParanth.top() != std::string(1,c) )
-            {
-                throw LangException{0,std::string( "There paranthese was lost :" ) + c};
-            }
-            else if ( close_parantheses_match.contains(std::string(1,c)) && stackParanth.top() == std::string(1,c) )
-            {
-                stackParanth.pop();
-            }
-            if ( stackParanth.empty() && !in_operator && (operator_symbols.find(c) != std::string::npos) )
-            {
-                logger << c <<" <-To Next Token\n";
-                in_operator = true;
-                k++;
-                res.push_back("");
-            }
-            else if ( in_operator && (operator_symbols.find(c) == std::string::npos) )
-            {
-                logger << c <<" <-To Next Token\n";
-                res.push_back("");
-                k++;
-                in_operator = false;
-            }
-            else if ( in_operator && (operator_symbols.find(c) != std::string::npos) )
-            {
-                if ( !operators_weigth.contains(res[k]+c))
-                {
-                    logger << c <<" <-To Next Token\n";
-                    res.push_back("");
-                    k++;
-                }
-            }
-            res[k]+=c;
-            logger.log();
-        }
-    }
-    if (!stackParanth.empty()) throw LangException( 0,"Open and Close paratheses aren't matching" );
-    if (res[0]=="") res.erase(res.begin());
-    for (size_t i = 0;i<res.size();i++)
-    {
-        logger<<"[" <<i<<"] \'"<<res[i]<<"\'\n";
-    }
-    logger << "\n";
-    logger.log();
-    return res;
-}
-
 ////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////
 
 Token::Token(const std::string& v,TokenType t): value(v),type(t){}
 
 void Token::print() const
 {
-    std::cout<<"Type: "<<(int)type<<", Value: \'"<<value<<"\' "<<'\n';
+    std::cout<<"Тип: "<<(int)type<<", Значение: \'"<<value<<"\' "<<'\n';
 }
 
 void Lexer::update()
@@ -339,6 +276,7 @@ void Expression::unParenth()
     if (!(nexpr.size()==1 && nexpr[0].value[0] == '(' )) return;
     nexpr[0].value.erase(nexpr[0].value.length()-1,1);
     nexpr[0].value.erase(0,1);
+    //nexpr = l.tokenize( nexpr[0].value );
 }
 
 ExprElem* Expression::makeTree()
@@ -364,6 +302,11 @@ ExprElem* Expression::makeTree()
         operNode->setRight( R.makeTree() );
         return operNode;
     }
+    else if (type==TokenType::Expression)
+    {
+        Expression X = Expression(nexpr[0].value);
+        return X.makeTree();
+    }
     else if (type==TokenType::UnaryOperator)
     {
         auto unaryNode = new ExprUnarOperation( nexpr[next].value );
@@ -381,5 +324,9 @@ ExprElem* Expression::makeTree()
         logger.log();
         return new ExprVariable(nexpr[next].value);
     }
-    else throw LangException{0,"WrongType"};
+    else
+    {
+        nexpr[next].print();
+        throw LangException{0,std::string("WrongType")};
+    }
 }

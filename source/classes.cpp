@@ -37,6 +37,7 @@ Object BaseLangObject::substract(Object&) { throw LangException{0,std::string("O
 Object BaseLangObject::divide(Object&) { throw LangException{0,std::string("Operation [ DIVIDE ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
 Object BaseLangObject::negative() { throw LangException{0,std::string("Operation [ NEGATIVE ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
 Object BaseLangObject::inverse() { throw LangException{0,std::string("Operation [ INVERSE ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
+Object BaseLangObject::less(Object&) { throw LangException{0,std::string("Operation [ LESS ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
 
 //up<LangInt> BaseLangObject::toInt() { throw LangException{0,std::string("No Conversation from [") +TypeToStr.at(type) + "] to [INT]" }; }
 //up<LangDouble> BaseLangObject::toDouble() { throw LangException{0,std::string("No Conversation from [") +TypeToStr.at(type) + "] to [DOUBLE]" }; }
@@ -132,6 +133,15 @@ Object LangInt::negative()
 {
     return newInt(value*-1);
 }
+
+
+Object LangInt::less(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    int v2 = static_cast<LangInt*>(rhs.get())->value;
+    return value<v2 ? newBool(true) : newBool(false);
+}
+
 
 int LangInt::getValue()
 {
@@ -289,7 +299,7 @@ Object newBool(const std::string& v)
 {
     if (v=="true") return std::make_unique<LangBool>(true);
     if (v=="false") return std::make_unique<LangBool>(false);
-    LangException{0,std::string("Data type [BOOL] can't has rvalue: ")+v};
+    throw LangException{0,std::string("Data type [BOOL] can't has rvalue: ")+v};
 }
 Object newBool(const Object& ins)
 {

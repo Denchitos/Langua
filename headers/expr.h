@@ -3,7 +3,7 @@
 #include "init.h"
 #include "classes.h"
 #include<vector>
-
+#include"frame.h"
 #if 0
 using Token = std::string;
 using TokenSequence = std::vector<std::string>;
@@ -57,9 +57,9 @@ public:
     virtual ExprType getType();
     void setParent(ExprElem* p);
     ExprElem* getParent();
-    virtual Object getValue();
+    virtual Object getValue(Frame* frame);
     virtual ~ExprElem();
-    Object count();
+    Object count(Frame * f);
 };
 
 Object convert(const std::string& s);
@@ -70,7 +70,7 @@ class ExprNumber : public ExprElem
 public:
     using type = Object;
     ExprNumber(std::string& s);
-    Object getValue() override;
+    Object getValue(Frame* frame) override;
 };
 
 class ExprVariable : public ExprElem
@@ -79,7 +79,7 @@ class ExprVariable : public ExprElem
 public:
     using type = Object;
     ExprVariable(std::string& s);
-    Object getValue() override;
+    Object getValue(Frame* frame) override;
     std::string getName();
 };
 
@@ -97,7 +97,7 @@ public:
 
     ExprElem* getLeft( );
 
-    Object getValue();
+    Object getValue(Frame* frame) override;
 
     ExprOperation(const std::string& op);
     ~ExprOperation();
@@ -112,7 +112,7 @@ public:
 
     ExprElem* getChild( );
 
-    Object getValue();
+    Object getValue(Frame* frame) override;
 
     ExprUnarOperation(const std::string& op);
     ~ExprUnarOperation();
