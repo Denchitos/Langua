@@ -1,4 +1,4 @@
-### Langua - интерпретатор языка программирования
+# Langua - интерпретатор языка программирования
 
 **Langua** - это учебный интерпретатор с динамической типизацией, поддерживающий основные управляющие конструкции и простые типы данных. Проект написан на C++23 в рамках самообучения.
 
@@ -15,10 +15,10 @@ bool - словами true или false,
 string с помощью кавычек "CONTENT".
 Скоро добавлю CMake
 
-### Сборка через GCC
+# Сборка через GCC
 
-# Клонируйте репозиторий
+### Клонируйте репозиторий
 git clone https://github.com/Denchitos/Langua.git
 cd Langua
-# Пропишите в командной строке
+### Пропишите в командной строке
 g++ lang.cpp source/init.cpp source/expr.cpp source/classes.cpp source/executors.cpp source/frame.cpp source/interpreter.cpp -std=c++23 -o langua.exe
