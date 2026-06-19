@@ -1,17 +1,31 @@
-PRINT;"INPUT A VALUE\n";
+PRINT;
+"INPUT A VALUE\n";
 INPUT;
 a = _input;
 a;
 while (a<7)
 {
-    PRINT;a;
-    PRINT;"less then 7\n";
-    PRINT;"HELLO ALL"*4 + "\n";
+    PRINT;
+    a;
+    PRINT;
+    "less then 7\n";
+    PRINT;
+    "HELLO ALL"*4 + "\n";
     a =  a+1;
+    PRINT;
+    "Input x";
     INPUT;
     x = _input;
     if (x<8)
     {
-        PRINT;"YES IN IF";
+        PRINT;
+        "YES IN IF\n";
     }
+    else
+    {
+        PRINT;
+        "NO IN ELSE\n";
+    }
+    PRINT;
+    "PRINTED ALWAYS IN THE END OF WHILE\n";
 }
