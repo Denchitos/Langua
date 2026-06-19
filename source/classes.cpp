@@ -10,6 +10,17 @@ const std::unordered_map<DataType,std::string> TypeToStr
     { DataType::String, "STRING" }
 };
 
+LEBadOperator::LEBadOperator(const char* op,DataType t1,DataType t2)
+{
+    cause = std::string("Binary Operation [") + op + "] is n't defined for ["+TypeToStr.at(t1)+"] AND [" + TypeToStr.at(t2) + "]";
+}
+
+LEBadOperator::LEBadOperator(const char* op,DataType t1)
+{
+    cause = std::string("Unary Operation [") + op + "] is n't defined for ["+TypeToStr.at(t1)+"]";
+}
+
+
 ////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////////BASELANGOBJECT////////BASELANGOBJECT////
 ////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////////BASELANGOBJECT////////BASELANGOBJECT////
 ////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////BASELANGOBJECT////////BASELANGOBJECT////////BASELANGOBJECT////
@@ -31,13 +42,19 @@ std::string BaseLangObject::toStdStr()const
     return "$MISSINGNO";
 };
 
-Object BaseLangObject::sum(Object&) { throw LangException{0,std::string("Operation [ SUM ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
-Object BaseLangObject::multiply(Object&) { throw LangException{0,std::string("Operation [ MULTIPLY ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
-Object BaseLangObject::substract(Object&) { throw LangException{0,std::string("Operation [ SUBSTRACT ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
-Object BaseLangObject::divide(Object&) { throw LangException{0,std::string("Operation [ DIVIDE ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
-Object BaseLangObject::negative() { throw LangException{0,std::string("Operation [ NEGATIVE ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
-Object BaseLangObject::inverse() { throw LangException{0,std::string("Operation [ INVERSE ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
-Object BaseLangObject::less(Object&) { throw LangException{0,std::string("Operation [ LESS ] is n't defined for [")+TypeToStr.at(type)+"]"}; }
+Object BaseLangObject::sum(Object& rhs)       { throw LEBadOperator("SUM",type,rhs->getType() ); }
+Object BaseLangObject::multiply(Object& rhs)  { throw LEBadOperator("MULTIPLY",type,rhs->getType() ); }
+Object BaseLangObject::substract(Object& rhs) { throw LEBadOperator("SUB",type,rhs->getType() ); }
+Object BaseLangObject::divide(Object& rhs)    { throw LEBadOperator("DIVIDE",type,rhs->getType() ); }
+Object BaseLangObject::negative()             { throw LEBadOperator("NEGATIVE",type); }
+Object BaseLangObject::inverse()              { throw LEBadOperator("INVERSE",type); }
+Object BaseLangObject::less(Object& rhs)      { throw LEBadOperator("LESS",type,rhs->getType() ); }
+Object BaseLangObject::greater(Object& rhs)   { throw LEBadOperator("GREATER",type,rhs->getType() ); }
+Object BaseLangObject::equal(Object& rhs)     { throw LEBadOperator("EQUAL",type,rhs->getType() ); }
+Object BaseLangObject::ls_or_eq(Object& rhs)      { throw LEBadOperator("<=",type,rhs->getType() ); }
+Object BaseLangObject::gr_or_eq(Object& rhs)      { throw LEBadOperator(">=",type,rhs->getType() ); }
+Object BaseLangObject::AND(Object& rhs)       { throw LEBadOperator("AND",type,rhs->getType() ); }
+Object BaseLangObject::OR(Object& rhs)        { throw LEBadOperator("OR",type,rhs->getType() ); }
 
 //up<LangInt> BaseLangObject::toInt() { throw LangException{0,std::string("No Conversation from [") +TypeToStr.at(type) + "] to [INT]" }; }
 //up<LangDouble> BaseLangObject::toDouble() { throw LangException{0,std::string("No Conversation from [") +TypeToStr.at(type) + "] to [DOUBLE]" }; }
@@ -74,7 +91,7 @@ Object LangInt::sum(Object& rhs)
         double v2 = static_cast<LangDouble*>(rhs.get())->getValue();
         return newDouble( value+ v2);
     }
-    throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    throw LEBadOperator("SUM",type,rhs->getType() );
 }
 
 Object LangInt::substract(Object& rhs)
@@ -89,7 +106,7 @@ Object LangInt::substract(Object& rhs)
         double v2 = static_cast<LangDouble*>(rhs.get())->getValue();
         return newDouble( value - v2);
     }
-    throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    throw LEBadOperator("SUB",type,rhs->getType() );
 }
 
 Object LangInt::divide(Object& rhs)
@@ -106,7 +123,7 @@ Object LangInt::divide(Object& rhs)
         if (v2==0.0) throw LangException{0,std::string("Division by Zero")};
         return newDouble( value / v2);
     }
-    throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    throw LEBadOperator("DIVIDE",type,rhs->getType() );;
 }
 
 Object LangInt::multiply(Object& rhs)
@@ -126,7 +143,7 @@ Object LangInt::multiply(Object& rhs)
         auto t = newInt(value);
         return rhs->multiply( t );
     }
-    throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    throw LEBadOperator("MULTIPLY",type,rhs->getType() );
 }
 
 Object LangInt::negative()
@@ -137,9 +154,37 @@ Object LangInt::negative()
 
 Object LangInt::less(Object& rhs)
 {
-    if ( rhs->getType() != getType() ) throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    if ( rhs->getType() != getType() ) throw LEBadOperator("LESS",type,rhs->getType() );;
     int v2 = static_cast<LangInt*>(rhs.get())->value;
     return value<v2 ? newBool(true) : newBool(false);
+}
+
+Object LangInt::greater(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("GREATER",type,rhs->getType() );;
+    int v2 = static_cast<LangInt*>(rhs.get())->value;
+    return value>v2 ? newBool(true) : newBool(false);
+}
+
+Object LangInt::equal(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("EQUAL",type,rhs->getType() );;
+    int v2 = static_cast<LangInt*>(rhs.get())->value;
+    return value==v2 ? newBool(true) : newBool(false);
+}
+
+Object LangInt::gr_or_eq(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator(">=",type,rhs->getType() );;
+    int v2 = static_cast<LangInt*>(rhs.get())->value;
+    return value>=v2 ? newBool(true) : newBool(false);
+}
+
+Object LangInt::ls_or_eq(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("<=",type,rhs->getType() );;
+    int v2 = static_cast<LangInt*>(rhs.get())->value;
+    return value<=v2 ? newBool(true) : newBool(false);
 }
 
 
@@ -191,7 +236,7 @@ Object LangDouble::sum(Object& rhs)
     {
         v2 = static_cast<LangInt*>(rhs.get())->getValue();
     }
-    else throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    else throw LEBadOperator("SUM",type,rhs->getType() );
     return newDouble( value+ v2 );
 }
 
@@ -206,7 +251,7 @@ Object LangDouble::substract(Object& rhs)
     {
         v2 = static_cast<LangInt*>(rhs.get())->getValue();
     }
-    else throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    else throw LEBadOperator("SUB",type,rhs->getType() );;
     return newDouble( value - v2 );
 }
 
@@ -221,7 +266,7 @@ Object LangDouble::divide(Object& rhs)
     {
         v2 = static_cast<LangInt*>(rhs.get())->getValue();
     }
-    else throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    else throw LEBadOperator("DIVIDE",type,rhs->getType() );
     
     if (v2==0) throw LangException{0,std::string("Division by Zero")};
 
@@ -239,13 +284,48 @@ Object LangDouble::multiply(Object& rhs)
     {
         v2 = static_cast<LangInt*>(rhs.get())->getValue();
     }
-    else throw LangException{0,std::string("Wrong Types: (") + TypeToStr.at(getType()) + ") AND (" + TypeToStr.at(rhs->getType())+")"};
+    else throw LEBadOperator("MULTIPLY",type,rhs->getType() );
     return newDouble( value * v2 );
 }
 
 Object LangDouble::negative()
 {
     return newDouble(-1*value);
+}
+
+Object LangDouble::less(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("LESS",type,rhs->getType() );;
+    int v2 = static_cast<LangDouble*>(rhs.get())->value;
+    return value<v2 ? newBool(true) : newBool(false);
+}
+
+Object LangDouble::greater(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("LESS",type,rhs->getType() );;
+    int v2 = static_cast<LangDouble*>(rhs.get())->value;
+    return value>v2 ? newBool(true) : newBool(false);
+}
+
+Object LangDouble::equal(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("LESS",type,rhs->getType() );;
+    double v2 = static_cast<LangDouble*>(rhs.get())->value;
+    return value==v2 ? newBool(true) : newBool(false);
+}
+
+Object LangDouble::gr_or_eq(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator(">=",type,rhs->getType() );;
+    double v2 = static_cast<LangDouble*>(rhs.get())->value;
+    return value>=v2 ? newBool(true) : newBool(false);
+}
+
+Object LangDouble::ls_or_eq(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("<=",type,rhs->getType() );;
+    double v2 = static_cast<LangDouble*>(rhs.get())->value;
+    return value<=v2 ? newBool(true) : newBool(false);
 }
 
 double LangDouble::getValue()
@@ -281,6 +361,21 @@ Object LangBool::inverse()
 {
     return newBool(!value);
 };
+
+Object LangBool::AND(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("AND",type,rhs->getType() );;
+    auto v = static_cast<LangBool*>(rhs.get())->value;
+    return newBool(value&&v);
+};
+
+Object LangBool::OR(Object& rhs)
+{
+    if ( rhs->getType() != getType() ) throw LEBadOperator("OR",type,rhs->getType() );;
+    auto v = static_cast<LangBool*>(rhs.get())->value;
+    return newBool(value||v);
+};
+
 bool LangBool::getValue()
 {
     return value;
@@ -344,7 +439,7 @@ Object LangString::sum(Object& rhs)
 {
     if (rhs->getType()!=DataType::String)
     {
-        { throw LangException{0,std::string("Operation [ MULTIPLY ] is n't defined for [")+TypeToStr.at(type)+"] and ["+ TypeToStr.at(rhs->getType()) +"]"}; }
+        throw LEBadOperator( "SUM",type,rhs->getType() );
     }
     std::string x = static_cast<LangString*>(rhs.get())->getValue();
     return newString(value+x);
@@ -353,7 +448,7 @@ Object LangString::multiply(Object& rhs)
 {
     if (rhs->getType()!=DataType::Int)
     {
-        { throw LangException{0,std::string("Operation [ MULTIPLY ] is n't defined for [")+TypeToStr.at(type)+"] and ["+ TypeToStr.at(rhs->getType()) +"]"}; }
+        throw LEBadOperator( "MULTIPLY",type,rhs->getType() );
     }
     int x = static_cast<LangInt*>(rhs.get())->getValue();
     std::string s;

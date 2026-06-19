@@ -6,6 +6,7 @@
 #include<unordered_map>
 #include<unordered_set>
 #include"classes.h"
+#include"lang_exception.h"
 ////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////
 
 template<typename T>
@@ -14,12 +15,6 @@ concept Loggable = requires(std::ostream& os, T& instance)
     { os << instance} -> std::convertible_to<std::ostream&>;
 };
 
-struct LangException
-{
-public:
-    int line;
-    std::string cause;
-};
 void setDebugStream(std::ostream* out = &std::cout);
 bool getDebug();
 class Logger

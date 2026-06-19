@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 #include<memory>
-
+#include"lang_exception.h"
 template<typename T>
 using up = std::unique_ptr<T>;
 
@@ -22,6 +22,12 @@ class LangDouble;
 
 using Object = std::unique_ptr<BaseLangObject>;
 
+class LEBadOperator: public LangException
+{
+public:
+    LEBadOperator(const char* op,DataType t1,DataType t2);
+    LEBadOperator(const char* op,DataType t1);
+};
 
 
 class BaseLangObject
@@ -38,6 +44,13 @@ public:
     virtual Object negative();
     virtual Object inverse();
     virtual Object less(Object&);
+    virtual Object greater(Object&);
+    virtual Object equal(Object&);
+    virtual Object gr_or_eq(Object&);
+    virtual Object ls_or_eq(Object&);
+    virtual Object AND(Object&);
+    virtual Object OR(Object&);
+
     virtual std::string toStdStr() const;
     virtual ~BaseLangObject() = default;
 };
@@ -56,6 +69,10 @@ public:
     Object substract(Object&) override;
     Object negative() override;
     Object less(Object&);
+    Object greater(Object&);
+    Object equal(Object&);
+    Object gr_or_eq(Object&);
+    Object ls_or_eq(Object&);
     int getValue();
     //up<LangInt> toInt();
     //up<LangDouble> toDouble();
@@ -89,6 +106,11 @@ public:
     Object divide(Object&) override;
     Object substract(Object&) override;
     Object negative() override;
+    Object less(Object&);
+    Object greater(Object&);
+    Object equal(Object&);
+    Object gr_or_eq(Object&);
+    Object ls_or_eq(Object&);
     double getValue();
     std::string toStdStr() const override;
 
@@ -112,6 +134,10 @@ public:
     DataType getType() const override;
     Object inverse() override;
     bool getValue();
+    
+    Object AND(Object&);
+    Object OR(Object&);
+
     std::string toStdStr() const override;
 
     //up<LangInt> toInt();

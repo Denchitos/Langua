@@ -13,18 +13,24 @@ while (a<7)
     "HELLO ALL"*4 + "\n";
     a =  a+1;
     PRINT;
-    "Input x";
+    "Input x:\n";
     INPUT;
     x = _input;
-    if (x<8)
+    if (x == 9)
     {
         PRINT;
-        "YES IN IF\n";
+        "X==9\n";
     }
     else
     {
-        PRINT;
-        "NO IN ELSE\n";
+        if ( x<5 && x<10)
+        {
+            PRINT; "X>5 || X<2\n";
+        }
+        else
+        {
+            PRINT; "2 <= X\n"
+        }
     }
     PRINT;
     "PRINTED ALWAYS IN THE END OF WHILE\n";

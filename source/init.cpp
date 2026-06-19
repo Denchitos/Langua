@@ -6,19 +6,16 @@ Logger logger;
 
 const std::unordered_map<std::string,short> operators_weigth{
     { "=", 0 }, { "-=", 0 }, { "+=", 0 }, { "*=", 0 }, { "/=", 0 },
-    {"<", 3},
+    {"&&",1},
+    {"||",2},
+    {"<", 3},{">", 3},{"==", 3},{"<=", 3},{">=", 3},
     { "+" , 5 },{ "-" , 5 },
     {  "/", 6 },{  "*", 6 },
 };
 
-const std::unordered_set<std::string> unary_operators
-{
-    "-","!"
-};
-
 const std::unordered_set<std::string> binary_operators
 {
-    "=","-=","+=","*=","/=","+","-" ,"/","*","<"
+    "=","-=","+=","*=","/=","+","-" ,"/","*","<",">","==","||","&&"
 };
 
 const std::unordered_map<std::string,Object (BaseLangObject::*)(Object&)> operator_match
@@ -27,7 +24,19 @@ const std::unordered_map<std::string,Object (BaseLangObject::*)(Object&)> operat
     { "-", &BaseLangObject::substract},
     { "/", &BaseLangObject::divide },
     { "*", &BaseLangObject::multiply},
-    { "<", &BaseLangObject::less}
+    { "<", &BaseLangObject::less},
+    { ">", &BaseLangObject::greater},
+    { "<=", &BaseLangObject::ls_or_eq},
+    { ">=", &BaseLangObject::gr_or_eq},
+    { "==", &BaseLangObject::equal},
+    { "&&", &BaseLangObject::AND},
+    { "||", &BaseLangObject::OR},
+};
+
+
+const std::unordered_set<std::string> unary_operators
+{
+    "-","!"
 };
 
 const std::unordered_map<std::string,Object (BaseLangObject::*)()> unary_operator_match
@@ -46,7 +55,7 @@ const std::unordered_map<std::string,DataType> string_value
 };
 const std::string letters = "$.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
 const std::string numbers = "0123456789";
-const std::string operator_symbols = "<+-/*=!";
+const std::string operator_symbols = "<>+-/*=!|&";
 
 bool canBeVar(std::string& s)
 {
@@ -76,6 +85,16 @@ bool isDigit(char c)
 bool isOperator(char c)
 {
     return  operator_symbols.find(c) != std::string::npos;
+}
+
+LangException::LangException(int,const std::string& s)
+{
+    cause = s;
+}
+
+std::string LangException::getCause() const
+{
+    return cause;
 }
 
 ////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER////LOGGER

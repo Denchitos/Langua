@@ -35,7 +35,7 @@ void test()
         }
         catch(LangException le)
         {
-            std::cout<<le.cause<<"\n";
+            std::cout<<le.getCause()<<"\n";
         }
         catch(std::exception& err)
         {
@@ -61,6 +61,11 @@ int main(int argc,char* argv[])
         return 1;
     }
     std::string filename = argv[1];
+    if (filename=="test")
+    {
+        test();
+        return 0;
+    }
     std::ifstream code(filename);
     std::string text;
     if (code.is_open())
@@ -99,7 +104,7 @@ int main(int argc,char* argv[])
     }
     catch(LangException& e)
     {
-        std::cerr<<e.cause<<"\n";
+        std::cerr<<e.getCause()<<"\n";
     }
     catch(std::exception& e)
     {

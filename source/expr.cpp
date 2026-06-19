@@ -175,14 +175,24 @@ std::vector<Token> Lexer::tokenize(const std::string& s)
             update();
             continue;
         }
-        else if( isOperator(s[i]) && parenCounter==0 )
+        else if (isOperator(s[i]) && parenCounter == 0)
         {
-            while (i<len && isOperator(s[i]) && ( binary_operators.contains(currentToken+s[i]) || unary_operators.contains(currentToken+s[i]) ) )
+            currentToken += s[i++];
+
+            while (i < len && isOperator(s[i]) &&
+                (binary_operators.contains(currentToken + s[i]) ||
+                    unary_operators.contains(currentToken + s[i])))
             {
-                currentToken+=s[i++];
+                currentToken += s[i++];
             }
+
             currentType = TokenType::UnaryOperator;
-            if ( !result.empty() && !(result.back().type==TokenType::BinaryOperator || result.back().type==TokenType::UnaryOperator)) currentType=TokenType::BinaryOperator;
+            if (!result.empty() &&
+                result.back().type != TokenType::BinaryOperator &&
+                result.back().type != TokenType::UnaryOperator)
+            {
+                currentType = TokenType::BinaryOperator;
+            }
             update();
             continue;
         }

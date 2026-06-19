@@ -85,7 +85,7 @@ void ExecutorTraveller::visit(InstrNodeExpr* n)
         {
             std::cout<<"\n";
             instr->print();
-            throw LangException{0,std::string("↑ - This isn't an expression;")};
+            throw LangException{0,std::string("<-- This isn't an expression;")};
         }
     }
     else if (n->get() == "INPUT"){
@@ -99,7 +99,7 @@ void ExecutorTraveller::visit(InstrNodeExpr* n)
                 }
                 catch (LangException& e)
                 {
-                    std::cout<<e.cause<<"\nTry input again\n";
+                    std::cout<<e.getCause()<<"\nTry input again\n";
                     continue;
                 }
                 f->setVar("_input",a);
