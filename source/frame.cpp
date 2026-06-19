@@ -3,26 +3,26 @@
 #include"../headers/init.h"
 void Frame::setVar(const std::string& name,Object& val)
 {
-    std::cout<<"[FRAME] Setted variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
+    //std::cout<<"[FRAME] Setted variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
     frame_vars[name] = std::move(val);
 }
 
 void Frame::setVar(const std::string& name,Object&& val)
 {
-    std::cout<<"[FRAME] Setted and Moved variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
+    //std::cout<<"[FRAME] Setted and Moved variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
     frame_vars[name] = std::move(val);
 }
 
 Object Frame::copyVar(const std::string& name)
 {
-    std::cout<<"[FRAME] copy var\n";
+    //std::cout<<"[FRAME] copy var\n";
     if (frame_vars.contains(name))
     {
-        std::cout<<"[FRAME] var found\n";
+        //std::cout<<"[FRAME] var found\n";
         const auto& z = frame_vars[name];
         return newObject(z);
     }
-    std::cout<<"Var Doesn't found\n";
+    //std::cout<<"Var Doesn't found\n";
     throw LangException{ 0,std::string("Unknown variable \'") + name + "\'\n"};
 };
 
@@ -61,39 +61,27 @@ ScopedFrame::ScopedFrame(Frame* parent): parent(parent)
 
 void ScopedFrame::setVar(const std::string& name,Object& val)
 {
-    std::cout<<"[SCOPED FRAME] Setted variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
+    //std::cout<<"[SCOPED FRAME] Setted variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
     frame_vars[name] = std::move(val);
 }
 
 void ScopedFrame::setVar(const std::string& name,Object&& val)
 {
-    std::cout<<"[FRAME] Setted and Moved variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
+    //std::cout<<"[FRAME] Setted and Moved variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
     frame_vars[name] = std::move(val);
 }
 
 Object ScopedFrame::copyVar(const std::string& name)
 {
-    std::cout<<"TRY TO FIND\n";
+    //std::cout<<"TRY TO FIND\n";
     if (frame_vars.contains(name))
     {
-        std::cout<<"FOUND in this SCOPE\n";
+        //std::cout<<"FOUND in this SCOPE\n";
         const auto& z = frame_vars[name];
-        std::cout<<"[FRAME 1]"<<(int)z->getType()<<" "<<z->toStdStr();
+        //std::cout<<"[FRAME 1]"<<(int)z->getType()<<" "<<z->toStdStr();
         return newObject(z);
     }
-    std::cout<<"LEVEL UPPING\n";
-    try{
-        return parent->copyVar(name);
-    }
-    catch(LangException& e)
-    {
-        std::cout<<e.cause<<"\n";
-    }
-    catch(std::exception& e)
-    {
-        std::cout<<e.what()<<"\n";
-    }
-    std::cout<<"[Fawatafa]\n";
+    return parent->copyVar(name);
 }
 
 void ScopedFrame::consoleLogVars()
@@ -116,7 +104,7 @@ void ScopedFrame::consoleLogVars()
     {
         std::cout << "\tNO VARIABLES\n";
     }
-    std::cout << "}\n";
+    //std::cout << "}\n";
 }
 
 Frame* ScopedFrame::getParent()

@@ -2,9 +2,6 @@
 #include"headers/executors.h"
 #include "fstream"
 
-//#define MENU
-
-#ifdef MENU
 void test()
 {
     std::string my_expr;
@@ -50,25 +47,20 @@ void test()
         }
     }
 }
-int main(int argc, char* argv[])
-{
-    system("chcp 65001");
-    //system("chcp 1251");
-    std::cout<<argc<<"\n";
-    for (int i=1; i<argc;i++)
-    {
-        if (std::string(argv[i]) == "-debug") setDebugMode(true);
-        std::cout<<argv[i]<<"\n";
-    }
-    test();
-    return 0;
-}
-#endif
 
-#ifndef MENU
-int main()
+
+
+int main(int argc,char* argv[])
 {
-    std::string filename = "code.txt";
+    #ifdef _WIN32
+        system("chcp 65001");
+    #endif
+    if ( argc< 2)
+    {
+        std::cerr<<"Error! Expected:\nlang.exe <file> <flags...>";
+        return 1;
+    }
+    std::string filename = argv[1];
     std::ifstream code(filename);
     std::string text;
     if (code.is_open())
@@ -80,40 +72,39 @@ int main()
             text+='\n';
         }
     }
-    std::cout<<filename<<": [[[\n"<<text<<"\n]]]\n\n\n";
+    else
+    {
+        std::cerr << "Unknown Error! Can't open file. : "<<filename<< "\n";
+        return 2;
+    }
+    //std::cout<<filename<<": [[[\n"<<text<<"\n]]]\n\n\n";
     code.close();
     CodeLexer l;
     erase(text,'\n');
     //erase(text,' ');
     l.tokenize(text);
     auto instructions = l.get();
-    std::cout<<"Tokens[\n";
-    for (auto& x:instructions)
-    {
-        std::cout<<static_cast<int>(x.type)<<':'<<x.token<<"\n";
-    }
-    std::cout<<"]\n";
+    //std::cout<<"Tokens[\n";
 
     CodeParser p;
     std::unique_ptr<InstrNode> x ( p.makeTree(instructions) );
     PrintTraveller t;
     ExecutorTraveller e;
-    std::cout<<"Start Adventure!\n";
+    std::cout<<"AST TREE:\n{\n";
     t.start(x.get());
-    std::cout<<"End Adventure :(\n";
-    std::cout<<"\n\n\nStart:\n";
+    std::cout<<"}\n";
+    std::cout<<"\n\n\n[Start]\n";
     try{
         e.start(x.get());
     }
     catch(LangException& e)
     {
-        std::cout<<e.cause<<"\n";
+        std::cerr<<e.cause<<"\n";
     }
     catch(std::exception& e)
     {
-        std::cout<<e.what()<<"\n";
+        std::cerr<<e.what()<<"\n";
     }
-    std::cout<<"Stop\n";
+    std::cout<<"\n[Stop]\n";
     system("pause");
 }
-#endif

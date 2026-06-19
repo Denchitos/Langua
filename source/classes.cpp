@@ -314,10 +314,23 @@ Object newBool(const Object& ins)
 /////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
 /////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////LANGSTRING/////
 
-
-LangString::LangString(const std::string& s): BaseLangObject(DataType::String), value(s)
+static std::string replaceAll(std::string str,const std::string& from,const std::string& to)
 {
+    if (from.empty()) return str;
+    size_t pos = 0;
+    while ((pos = str.find(from, pos)) != std::string::npos) {
+        str.replace(pos, from.length(), to);
+        pos += to.length();
+    }
+    return str;
+}
 
+LangString::LangString(const std::string& s): BaseLangObject(DataType::String)
+{
+    auto str = s;
+    if ( str.find("\\n") != std::string::npos ) str = replaceAll(str,"\\n","\n");
+    if ( str.find("\\t") != std::string::npos ) str = replaceAll(str,"\\t","\t");
+    value = str;
 }
 DataType LangString::getType() const
 {
@@ -352,7 +365,7 @@ Object LangString::multiply(Object& rhs)
 }
 std::string LangString::toStdStr() const
 {
-    return std::string("\"")+value+"\"";
+    return value;
 }
 
 Object newString(const std::string& v)

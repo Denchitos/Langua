@@ -12,6 +12,7 @@ extern const size_t CodeLexerReserve;
 extern const char SPACE;
 enum class InstrType
 {
+    Null,
     Expression,
     If,
     Else,
@@ -52,7 +53,6 @@ struct AbstractTraveller
 {
 protected:
     InstrNode* current = nullptr;
-    std::stack<InstrNode*> points;
 public:
     virtual void start(InstrNode* n) = 0;
     virtual void visit(InstrNodeExpr* n) = 0;
@@ -92,7 +92,7 @@ class InstrNodeExpr:public InstrNode
 public:
     InstrNodeExpr(const std::string& _e);
     std::string get();
-
+    ExprElem* getHead();
     void print();
     Object count(Frame* f);
     InstrNode* accept(AbstractTraveller* tr);

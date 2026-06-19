@@ -1,9 +1,17 @@
-count = 0;
-while (count<10)
+PRINT;"INPUT A VALUE\n";
+INPUT;
+a = _input;
+a;
+while (a<7)
 {
-    count = count+1;
-    PRINT;
-    PAUSE;
+    PRINT;a;
+    PRINT;"less then 7\n";
+    PRINT;"HELLO ALL"*4 + "\n";
+    a =  a+1;
+    INPUT;
+    x = _input;
+    if (x<8)
+    {
+        PRINT;"YES IN IF";
+    }
 }
-str = "HERE";
-PRINT;

@@ -145,7 +145,6 @@ std::vector<Token> Lexer::tokenize(const std::string& s)
     std::unordered_set<TokenType> expections;
     result.reserve(5);
     auto len = s.length();
-    auto last = len-1;
     size_t i = 0;
     while (i<len)
     {
@@ -256,12 +255,12 @@ size_t Expression::find_next_operator()
 {
     size_t pos = 0;
     short min_weight = 127;
-    for (size_t i = 1;i<nexpr.size();i++)
+    for (size_t i = nexpr.size()-1 ; i>0 ;i--)
     {
         if ( nexpr[i].type == TokenType::BinaryOperator )
         {
 
-            if ( operators_weigth.contains(nexpr[i].value) && operators_weigth.at(nexpr[i].value) < min_weight)
+            if ( operators_weigth.contains(nexpr[i].value) && ( ( min_weight != 0 && operators_weigth.at(nexpr[i].value) < min_weight) || ( min_weight == 0 && operators_weigth.at(nexpr[i].value) == 0 )))
             {
                 min_weight = operators_weigth.at(nexpr[i].value);
                 pos = i;

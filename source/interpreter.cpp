@@ -153,20 +153,18 @@ size_t InstrNode::counter = 0;
 
 InstrNodeExpr::InstrNodeExpr(const std::string& _e): expr(_e)
 {
-    std::cout<<"New eXpression\n";
+    //std::cout<<"New eXpression\n";
     Expression tree(_e);
-    try{
-        head = tree.makeTree();
-    }
-    catch(LangException& e){
-        std::cout<<"WHEN MAKING ELEM TREE\n";
-        std::cout<<"->[ "<<_e<<" ]<-\n";
-        std::cout<<e.cause<<"\n";
-    }
+    head = tree.makeTree();
 }
 std::string InstrNodeExpr::get()
 {
     return expr;
+}
+
+ExprElem* InstrNodeExpr::getHead()
+{
+    return head;
 }
 
 void InstrNodeExpr::print()
@@ -288,67 +286,58 @@ AbstractTraveller::~AbstractTraveller()
 
 InstrNode* CodeParser::makeTree(std::vector<InstrToken> tokens)
 {
-    std::cout<<"[New Tree]\n";
+    //std::cout<<"[New Tree]\n";
     auto len = tokens.size();
-    decltype(len) i = 1;
     InstrNode* start = new InstrStart;
     auto current = start;
-    std::cout<<len<<"\n";
-    int k = 0;
-    try{
-        for (size_t i = 0; i < len;)
-        {
-            //if ( k < 15 ) std::cout<<k<<" "<<i<<" Type: "<<static_cast<int>(tokens[i].type)<<" Expr: "<<tokens[i].token<<"\n";
-            if (tokens[i].type == InstrType::Expression)
-            {
-                auto newNode = makeNode(tokens[i++]);
-                current->setNext(newNode);
-                current = newNode;
-            }
-            else if (tokens[i].type == InstrType::Scope)
-            {
-                auto newNode = makeNode(tokens[i++]);
-                current->setNext(newNode);
-                current = newNode;
-            }
-            else if (tokens[i].type == InstrType::If)
-            {
-                auto newIf = new InstrNodeIf;
-                i++;
-                if ( tokens[i].type == InstrType::Expression )
-                {
-                    newIf->setCondition( makeNode(tokens[i++]) );
-                }
-                if ( tokens[i].type == InstrType::Expression ||  tokens[i].type == InstrType::Scope )
-                {
-                    newIf->setThen( makeNode(tokens[i++]) );
-                }
-                if (tokens[i].type == InstrType::Else)
-                {
-                    ++i;
-                    if (len && (tokens[i].type == InstrType::Expression || tokens[i].type == InstrType::Scope))
-                    {
-                        newIf->setElse(makeNode(tokens[i++]));
-                    }
-                }
-                current->setNext(newIf);
-                current = newIf;
-            }
-            else if (tokens[i].type == InstrType::While)
-            {
-                auto newNode = new InstrNodeWhile;
-                i++;
-                newNode->setCondition(makeNode(tokens[i++]));
-                newNode->setThen(makeNode(tokens[i++]));
-                current->setNext(newNode);
-                current = newNode;
-            }
-            //if ( start == nullptr ) start = current->getPrev();
-        }
-    }
-    catch(LangException& e)
+    //std::cout<<len<<"\n";
+    for (size_t i = 0; i < len;)
     {
-        std::cout<<e.cause<<"\n";
+        //if ( k < 15 ) std::cout<<k<<" "<<i<<" Type: "<<static_cast<int>(tokens[i].type)<<" Expr: "<<tokens[i].token<<"\n";
+        if (tokens[i].type == InstrType::Expression)
+        {
+            auto newNode = makeNode(tokens[i++]);
+            current->setNext(newNode);
+            current = newNode;
+        }
+        else if (tokens[i].type == InstrType::Scope)
+        {
+            auto newNode = makeNode(tokens[i++]);
+            current->setNext(newNode);
+            current = newNode;
+        }
+        else if (tokens[i].type == InstrType::If)
+        {
+            auto newIf = new InstrNodeIf;
+            i++;
+            if ( tokens[i].type == InstrType::Expression )
+            {
+                newIf->setCondition( makeNode(tokens[i++]) );
+            }
+            if ( tokens[i].type == InstrType::Expression ||  tokens[i].type == InstrType::Scope )
+            {
+                newIf->setThen( makeNode(tokens[i++]) );
+            }
+            if (tokens[i].type == InstrType::Else)
+            {
+                ++i;
+                if (len && (tokens[i].type == InstrType::Expression || tokens[i].type == InstrType::Scope))
+                {
+                    newIf->setElse(makeNode(tokens[i++]));
+                }
+            }
+            current->setNext(newIf);
+            current = newIf;
+        }
+        else if (tokens[i].type == InstrType::While)
+        {
+            auto newNode = new InstrNodeWhile;
+            i++;
+            newNode->setCondition(makeNode(tokens[i++]));
+            newNode->setThen(makeNode(tokens[i++]));
+            current->setNext(newNode);
+            current = newNode;
+        }
     }
     auto ret = start->getNext();
     start->setNext(nullptr);
@@ -383,5 +372,5 @@ InstrNode* makeNode(const InstrToken& node)
         auto N = new InstrNodeIf;
         return N;
     }
-    std::cout<<"[HERE]\n";
+    throw LangException{0,std::string("Unknown Token Type")};
 }

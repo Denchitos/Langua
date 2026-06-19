@@ -68,29 +68,49 @@ void ExecutorTraveller::evaluate()
 }
 void ExecutorTraveller::visit(InstrNodeExpr* n)
 {
-    if (n->get() == "PRINT"){
-        std::cout<<"[PRINT MACRO]";
+    if (n->get() == "PRINT_FRAME"){
+        std::cout<<"[PRINT FRAME MACRO]";
         f->consoleLogVars();
         return;
     }
+    else if (n->get() == "PRINT"){
+        auto instr = n->getNext();
+        if (instr==nullptr) throw LangException{0,std::string("There's no variable to print!")};
+        else if ( auto d = dynamic_cast<InstrNodeExpr*>(instr) )
+        {
+            auto head = d->getHead();
+            std::cout<<head->count(f)->toStdStr();
+        }
+        else
+        {
+            std::cout<<"\n";
+            instr->print();
+            throw LangException{0,std::string("↑ - This isn't an expression;")};
+        }
+    }
     else if (n->get() == "INPUT"){
-        std::cout<<"Input: ";
-        std::string input;
-        std::getline(std::cin,input);
-        auto a = newObject(input);
-        f->setVar("_input",a);
+            while (true)
+            {
+                std::string input;
+                std::getline(std::cin,input);
+                Object a = nullptr;
+                try{
+                    a = newObject(input);
+                }
+                catch (LangException& e)
+                {
+                    std::cout<<e.cause<<"\nTry input again\n";
+                    continue;
+                }
+                f->setVar("_input",a);
+                break;
+            }
     }
     else if (n->get()=="PAUSE")
     {
         system("pause");
     }
-    else try{
-        n->count(f);
-    }
-    catch(LangException& e)
-    {
-        std::cout<<e.cause<<'\n';
-    }
+    else n->count(f);
 }
 void ExecutorTraveller::visit(InstrNodeScope* n)
 {
@@ -108,28 +128,16 @@ void ExecutorTraveller::visit(InstrNodeScope* n)
 }
 void ExecutorTraveller::visit(InstrNodeIf* n)
 {
-    auto cond = n->getCondition();
     auto then = n->getThen();
     auto els = n->getElse();
-    try{
-        auto t = n->getCondition()->count(f);
-        if (t->toStdStr() == "true")
-        {
-            start(then);
-        }
-        else if (els)
-        {
-            start(els);
-        }
-    }
-    catch(LangException& e)
+    auto t = n->getCondition()->count(f);
+    if (t->toStdStr() == "true")
     {
-        std::cout<<"ERROR";
-        std::cout<<e.cause<<'\n';
+        start(then);
     }
-    catch(...)
+    else if (els)
     {
-        std::cout<<"UNKNOWN ERROR";
+        start(els);
     }
 }
 
@@ -137,20 +145,10 @@ void ExecutorTraveller::visit(InstrNodeWhile* n)
 {
     auto cond = n->getCondition();
     auto then = n->getThen();
-    try{
-        while (cond->count(f)->toStdStr() == "true")
-        {
-            //std::cout<<"[IN WHILE]\n";
-            start(then);
-        }
-    }
-    catch(LangException& e)
+    while (cond->count(f)->toStdStr() == "true")
     {
-        std::cout<<e.cause<<'\n';
-    }
-    catch(...)
-    {
-        std::cout<<"[UNKNOWN ERROR]"<<'\n';
+        //std::cout<<"[IN WHILE]\n";
+        start(then);
     }
 }
 
