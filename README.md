@@ -17,8 +17,8 @@ string с помощью кавычек "CONTENT".
 
 ### Сборка через GCC
 
-### Клонируйте репозиторий
+# Клонируйте репозиторий
 git clone https://github.com/Denchitos/Langua.git
 cd Langua
-### Пропишите в командной строке
+# Пропишите в командной строке
 g++ lang.cpp source/init.cpp source/expr.cpp source/classes.cpp source/executors.cpp source/frame.cpp source/interpreter.cpp -std=c++23 -o langua.exe
