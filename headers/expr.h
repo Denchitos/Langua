@@ -85,18 +85,14 @@ public:
 
 struct ExprOperation : public ExprElem
 {
-    ExprElem* right = nullptr;
-    ExprElem* left  = nullptr;
+    std::unique_ptr<ExprElem> right = nullptr;
+    std::unique_ptr<ExprElem> left  = nullptr;
     std::string op;
 public:
-    void setLeft( ExprElem* el );
+    void setLeft( std::unique_ptr<ExprElem>&& el );
 
-    void setRight( ExprElem* el );
-
-    ExprElem* getRight( );
-
-    ExprElem* getLeft( );
-
+    void setRight( std::unique_ptr<ExprElem>&& el );
+    
     Object getValue(Frame* frame) override;
 
     ExprOperation(const std::string& op);
@@ -105,12 +101,10 @@ public:
 
 struct ExprUnarOperation : public ExprElem
 {
-    ExprElem* child = nullptr;
+    std::unique_ptr<ExprElem> child = nullptr;
     std::string op;
 public:
-    void setChild( ExprElem* el );
-
-    ExprElem* getChild( );
+    void setChild( std::unique_ptr<ExprElem>&& el );
 
     Object getValue(Frame* frame) override;
 

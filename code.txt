@@ -1,37 +1,26 @@
-PRINT;
-"INPUT A VALUE\n";
-INPUT;
-a = _input;
-a;
-while (a<7)
-{
-    PRINT;
-    a;
-    PRINT;
-    "less then 7\n";
-    PRINT;
-    "HELLO ALL"*4 + "\n";
-    a =  a+1;
-    PRINT;
-    "Input x:\n";
+x = 0;
+while(x<15){
+    PRINT;"Input x\n";
     INPUT;
     x = _input;
-    if (x == 9)
+    if (x>5)
     {
-        PRINT;
-        "X==9\n";
+        PRINT;x;
+        PRINT;" : X>5\n";
     }
     else
-    {
-        if ( x<5 && x<10)
+    { 
+        if (x<0)
         {
-            PRINT; "X>5 || X<2\n";
+            PRINT;x;
+            PRINT;" : X<0\n";
         }
         else
         {
-            PRINT; "2 <= X\n"
+            PRINT;x;
+            PRINT;" : ELSE\n";
         }
     }
-    PRINT;
-    "PRINTED ALWAYS IN THE END OF WHILE\n";
+    PRINT;"THE END OF WHILE\n"
 }
+PRINT;"END of Program";

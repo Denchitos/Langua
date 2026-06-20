@@ -33,7 +33,7 @@ void test()
             std::unique_ptr<ExprElem> x(r.makeTree());
             if (x) x->count(&f);
         }
-        catch(LangException le)
+        catch(LangException& le)
         {
             std::cout<<le.getCause()<<"\n";
         }
@@ -87,19 +87,17 @@ int main(int argc,char* argv[])
     CodeLexer l;
     erase(text,'\n');
     //erase(text,' ');
-    l.tokenize(text);
-    auto instructions = l.get();
-    //std::cout<<"Tokens[\n";
-
-    CodeParser p;
-    std::unique_ptr<InstrNode> x ( p.makeTree(instructions) );
-    PrintTraveller t;
-    ExecutorTraveller e;
-    std::cout<<"AST TREE:\n{\n";
-    t.start(x.get());
-    std::cout<<"}\n";
-    std::cout<<"\n\n\n[Start]\n";
     try{
+        l.tokenize(text);
+        auto instructions = l.get();
+        CodeParser p;
+        std::unique_ptr<InstrNode> x (p.makeTree(instructions));
+        PrintTraveller t;
+        ExecutorTraveller e;
+        std::cout<<"AST TREE:\n{\n";
+        t.start(x.get());
+        std::cout<<"}\n";
+        std::cout<<"\n\n\n[Start]\n";
         e.start(x.get());
     }
     catch(LangException& e)

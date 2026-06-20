@@ -1,6 +1,6 @@
 #include "../headers/expr.h"
 #include<stack>
-
+#include<memory>
 static const size_t NOT_FOUND = 0;
 
 ExprElem::ExprElem(ExprType t) : type(t){}
@@ -45,16 +45,18 @@ std::string ExprVariable::getName()
     return value;
 }
 
-void ExprOperation::setLeft( ExprElem* el )
+void ExprOperation::setLeft( std::unique_ptr<ExprElem>&& el )
 {
-    left = el;
+    left = std::move(el);
     left->setParent(this);
 }
-void ExprOperation::setRight( ExprElem* el )
+void ExprOperation::setRight( std::unique_ptr<ExprElem>&& el )
 {
-    right = el;
+    right = std::move(el);
     right->setParent(this);
 }
+
+#if 0
 ExprElem* ExprOperation::getRight( )
 {
     return right;
@@ -63,6 +65,7 @@ ExprElem* ExprOperation::getLeft( )
 {
     return left;
 }
+#endif
 Object ExprOperation::getValue(Frame * f)
 {
     if (op!="="){
@@ -75,11 +78,11 @@ Object ExprOperation::getValue(Frame * f)
         //std::cout<<"In assignment\n";
         //system("pause");
         if ( left->getType() != ExprType::Variable ) throw LangException{0,"Left Operand isn't a variable"};
-        auto var = static_cast<ExprVariable*>(left);
+        auto var = static_cast<ExprVariable*>(left.get());
         
         //std::cout<<"Var Name: \n"<<var->getName()<<"\n";
         //system("pause");
-      
+
         Object b = right->getValue(f);
         //std::cout<<"Value: "<<b->toStdStr()<<" "<<b<<"\n";
         //system("pause");
@@ -92,13 +95,11 @@ Object ExprOperation::getValue(Frame * f)
 ExprOperation::ExprOperation(const std::string& op) : ExprElem(ExprType::Operation), op(op){}
 ExprOperation::~ExprOperation()
 {
-    if (right) delete right;
-    if (left) delete left;
 }
 
-void ExprUnarOperation::setChild( ExprElem* el )
+void ExprUnarOperation::setChild( std::unique_ptr<ExprElem>&& el )
 {
-    child = el;
+    child = std::move(el);
     child->setParent(this);
 }
 
@@ -112,16 +113,10 @@ Object ExprUnarOperation::getValue(Frame * f)
     throw LangException(0,std::string( "Unknown Unary Operation" ) + op);
 }
 
-ExprElem* ExprUnarOperation::getChild( )
-{
-    return child;
-}
-
 ExprUnarOperation::ExprUnarOperation(const std::string& op) : ExprElem(ExprType::UnarOperation), op(op){}
 
 ExprUnarOperation::~ExprUnarOperation()
 {
-    if (child) delete child;
 }
 
 ////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////NEWTOKENIZER////
@@ -307,8 +302,8 @@ ExprElem* Expression::makeTree()
         auto operNode = new ExprOperation(nexpr[next].value);
         Expression L = Expression(nexpr,0,next);
         Expression R = Expression(nexpr,next+1,nexpr.size());
-        operNode->setLeft( L.makeTree() );
-        operNode->setRight( R.makeTree() );
+        operNode->setLeft( std::unique_ptr<ExprElem>(L.makeTree()) );
+        operNode->setRight( std::unique_ptr<ExprElem>(R.makeTree()) );
         return operNode;
     }
     else if (type==TokenType::Expression)
@@ -320,7 +315,7 @@ ExprElem* Expression::makeTree()
     {
         auto unaryNode = new ExprUnarOperation( nexpr[next].value );
         Expression C = Expression( nexpr, 1,nexpr.size() );
-        unaryNode->setChild( C.makeTree() );
+        unaryNode->setChild( std::unique_ptr<ExprElem>(C.makeTree()) );
         return unaryNode;
     }
     else if (type==TokenType::Number || type==TokenType::StringValue)
