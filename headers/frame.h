@@ -10,22 +10,20 @@ protected:
 public:
     virtual std::unordered_map<std::string,Object>& getMap();
     virtual void setVar(const std::string& name,Object& val);
-    virtual void setVar(const std::string& name,Object&& val);
     virtual Object copyVar(const std::string& name);
+    virtual bool hasVar(const std::string & var);
     virtual void consoleLogVars();
-
-    virtual ~Frame();
+    virtual ~Frame() = 0;
 };
 
 class ScopedFrame final: public Frame
 {
-    Frame* parent;
+    ScopedFrame* parent;
 public:
-    ScopedFrame(Frame* parent);
+    ScopedFrame(ScopedFrame* parent = nullptr);
     Object copyVar(const std::string& name);
     void setVar(const std::string& name,Object& val);
-    void setVar(const std::string& name,Object&& val);
     void consoleLogVars();
-    Frame* getParent();
+    ScopedFrame* getParent();
     ~ScopedFrame();
 };

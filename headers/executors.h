@@ -15,7 +15,7 @@ struct PrintTraveller final: public AbstractTraveller
 struct ExecutorTraveller final: public AbstractTraveller
 {
 private:
-    Frame* f;
+    ScopedFrame* f;
 public:
     ExecutorTraveller();
     ExecutorTraveller(ExecutorTraveller&) = delete;

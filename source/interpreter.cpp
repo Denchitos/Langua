@@ -314,14 +314,14 @@ InstrNode* CodeParser::makeTree(std::vector<InstrToken> tokens)
             {
                 newIf->setCondition( makeNode(tokens[i++]) );
             }
-            if ( tokens[i].type == InstrType::Expression ||  tokens[i].type == InstrType::Scope )
+            if ( tokens[i].type == InstrType::Scope )
             {
                 newIf->setThen( makeNode(tokens[i++]) );
             }
             if (tokens[i].type == InstrType::Else)
             {
                 ++i;
-                if (len && (tokens[i].type == InstrType::Expression || tokens[i].type == InstrType::Scope))
+                if (i<len && tokens[i].type == InstrType::Scope)
                 {
                     newIf->setElse(makeNode(tokens[i++]));
                 }

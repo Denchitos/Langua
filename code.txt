@@ -3,20 +3,25 @@ while(x<15){
     PRINT;"Input x\n";
     INPUT;
     x = _input;
+    a = 15;
     if (x>5)
     {
+        b = 75;
         PRINT;x;
         PRINT;" : X>5\n";
     }
     else
     { 
+        c = 85;
         if (x<0)
         {
+            d = 100;
             PRINT;x;
             PRINT;" : X<0\n";
         }
         else
         {
+            e = 500;
             PRINT;x;
             PRINT;" : ELSE\n";
         }
@@ -24,3 +29,5 @@ while(x<15){
     PRINT;"THE END OF WHILE\n"
 }
 PRINT;"END of Program";
+PRINT_FRAME;
+PAUSE;

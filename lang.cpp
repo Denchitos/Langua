@@ -6,7 +6,7 @@ void test()
 {
     std::string my_expr;
     //setDebugMode();
-    Frame f;
+    ScopedFrame f;
     while (true)
     {
         std::cout << ">>>";
@@ -109,5 +109,5 @@ int main(int argc,char* argv[])
         std::cerr<<e.what()<<"\n";
     }
     std::cout<<"\n[Stop]\n";
-    system("pause");
+    //system("pause");
 }

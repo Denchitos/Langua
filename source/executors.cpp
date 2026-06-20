@@ -51,7 +51,7 @@ void PrintTraveller::visit(InstrNodeWhile* n)
 
 ExecutorTraveller::ExecutorTraveller()
 {
-    f = new Frame;
+    f = new ScopedFrame;
 }
 
 void ExecutorTraveller::start(InstrNode* n)

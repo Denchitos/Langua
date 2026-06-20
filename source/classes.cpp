@@ -517,7 +517,7 @@ Object newObject(const std::string& rValue)
 {
     size_t len = rValue.length();
     char c = rValue[0];
-    if (isDigit(c))
+    if (isDigit(c) || c=='-')
     {
         return (rValue.find('.')==std::string::npos) ? newInt( stoi(rValue) ) : newDouble(stod(rValue));
     }

@@ -7,12 +7,6 @@ void Frame::setVar(const std::string& name,Object& val)
     frame_vars[name] = std::move(val);
 }
 
-void Frame::setVar(const std::string& name,Object&& val)
-{
-    //std::cout<<"[FRAME] Setted and Moved variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
-    frame_vars[name] = std::move(val);
-}
-
 Object Frame::copyVar(const std::string& name)
 {
     //std::cout<<"[FRAME] copy var\n";
@@ -25,6 +19,11 @@ Object Frame::copyVar(const std::string& name)
     //std::cout<<"Var Doesn't found\n";
     throw LangException{ 0,std::string("Unknown variable \'") + name + "\'\n"};
 };
+
+bool Frame::hasVar(const std::string & var)
+{
+    return frame_vars.contains(var);
+}
 
 void Frame::consoleLogVars()
 {
@@ -54,20 +53,24 @@ Frame::~Frame()
 
 }
 
-ScopedFrame::ScopedFrame(Frame* parent): parent(parent)
+ScopedFrame::ScopedFrame(ScopedFrame* parent): parent(parent)
 {
     
 }
 
 void ScopedFrame::setVar(const std::string& name,Object& val)
 {
-    //std::cout<<"[SCOPED FRAME] Setted variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
-    frame_vars[name] = std::move(val);
-}
-
-void ScopedFrame::setVar(const std::string& name,Object&& val)
-{
-    //std::cout<<"[FRAME] Setted and Moved variable: "<<name<<" "<<(int)val->getType()<<" "<<val->toStdStr()<<"\n";
+    ScopedFrame* current = this;
+    while(current)
+    {
+        auto it = current->getMap().find(name);
+        if (it != current->getMap().end())
+        {
+            it->second = std::move(val);
+            return;
+        }
+        current = current->parent;
+    }
     frame_vars[name] = std::move(val);
 }
 
@@ -81,7 +84,8 @@ Object ScopedFrame::copyVar(const std::string& name)
         //std::cout<<"[FRAME 1]"<<(int)z->getType()<<" "<<z->toStdStr();
         return newObject(z);
     }
-    return parent->copyVar(name);
+    else if (parent) return parent->copyVar(name);
+    else throw LangException(0,std::string("Unknown Variable: ")+name);
 }
 
 void ScopedFrame::consoleLogVars()
@@ -107,7 +111,7 @@ void ScopedFrame::consoleLogVars()
     //std::cout << "}\n";
 }
 
-Frame* ScopedFrame::getParent()
+ScopedFrame* ScopedFrame::getParent()
 {
     return parent;  
 }
@@ -116,13 +120,7 @@ Frame* ScopedFrame::getParent()
 
 ScopedFrame::~ScopedFrame()
 {
-    for (auto & [name , var] : frame_vars)
-    {
-        if (parent->getMap().contains(name) && parent->getMap()[name]->getType() == var->getType() )
-        {
-            parent->setVar(name,newObject(var));
-        }
-    }
+
 }
 
 
